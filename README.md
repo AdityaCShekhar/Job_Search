@@ -57,7 +57,11 @@ LinkedIn's public search markup can change and may rate-limit automated requests
 
 ## GitHub Actions
 
-The included workflow runs every five minutes. Add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` as repository secrets; the workflow writes a temporary config from the checked-in template and persists `jobs.db` as an artifact between runs only when configured for that use. For reliable long-lived deduplication, a local process or an external artifact/cache strategy is recommended because GitHub-hosted runners are ephemeral.
+The included workflow runs every 15 minutes on GitHub-hosted runners. It uses SQLite (`jobs.db`) with the Actions cache because GitHub-hosted runners cannot access a database running on your local computer. The cache preserves the seen-job database between runs, although cache eviction can eventually cause an old job to be seen again.
+
+For Telegram notifications, add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` under the repository's **Settings → Secrets and variables → Actions**. Scheduled workflows run from the default branch. Public repositories can use standard GitHub-hosted runners at no charge; private GitHub Free repositories have a monthly minutes quota.
+
+Docker deployments use the PostgreSQL URL supplied by `docker-compose.yml`; the checked-in `config.yaml` intentionally defaults to the local SQLite file and contains no database password.
 
 ## Tests
 

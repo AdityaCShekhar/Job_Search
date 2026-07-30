@@ -2,12 +2,19 @@ name: LinkedIn job monitor
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
+
+concurrency:
+  group: job-monitor
+  cancel-in-progress: true
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,19 +26,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: jobs.db
-          key: job-monitor-db-${{ github.ref }}
+          key: job-monitor-db-${{ github.run_id }}
+          restore-keys: |
+            job-monitor-db-
       - name: Run monitor
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path("config.yaml")
-          text = p.read_text()
-          text = text.replace('token: ""', 'token: "' + __import__('os').environ.get('TELEGRAM_BOT_TOKEN', '') + '"')
-          text = text.replace('chat_id: ""', 'chat_id: "' + __import__('os').environ.get('TELEGRAM_CHAT_ID', '') + '"')
-          p.write_text(text)
-          PY
-          python -m app.main once
-
+          JOB_MONITOR_DATABASE: jobs.db
+        run: python -m app.main once

@@ -3,7 +3,7 @@ general:
   request_timeout: 30
   retries: 3
 
-database: postgresql://postgres:postgres@127.0.0.1:5432/job_search
+database: jobs.db
 
 profiles:
   - name: java-backend
