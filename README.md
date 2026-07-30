@@ -26,7 +26,7 @@ docker compose up -d --build
 docker compose logs -f job-monitor
 ```
 
-Docker Compose runs PostgreSQL with a named `postgres-data` volume, so the database survives container restarts. Check or manage it with one-off commands:
+Docker Compose stores SQLite in a named `job-data` volume, so the database survives container restarts. Check or manage it with one-off commands:
 
 ```bash
 docker compose run --rm job-monitor --config /config/config.yaml stats
@@ -35,7 +35,7 @@ docker compose run --rm job-monitor --config /config/config.yaml test-notificati
 docker compose down
 ```
 
-The monitor container runs as a non-root user. Keep `config.yaml` out of public repositories if it contains Telegram credentials; alternatively, mount a private config file at `/config/config.yaml`. Local non-Docker runs still use SQLite by default; Docker overrides the database with `JOB_MONITOR_DATABASE`.
+The monitor container runs as a non-root user. Keep `config.yaml` out of public repositories if it contains Telegram credentials; alternatively, mount a private config file at `/config/config.yaml`. The monitor uses SQLite both locally and in Docker.
 
 Commands are `run`, `once`, `validate-config`, `stats`, `clear-cache`, and `test-notification`. The default interval is five minutes. `run` keeps one process alive; cron and Actions should invoke `once`.
 
@@ -61,7 +61,7 @@ The included workflow runs every 15 minutes on GitHub-hosted runners. It uses SQ
 
 For Telegram notifications, add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` under the repository's **Settings → Secrets and variables → Actions**. Scheduled workflows run from the default branch. Public repositories can use standard GitHub-hosted runners at no charge; private GitHub Free repositories have a monthly minutes quota.
 
-Docker deployments use the PostgreSQL URL supplied by `docker-compose.yml`; the checked-in `config.yaml` intentionally defaults to the local SQLite file and contains no database password.
+Docker deployments use the SQLite database mounted at `./data/jobs.db`.
 
 ## Tests
 

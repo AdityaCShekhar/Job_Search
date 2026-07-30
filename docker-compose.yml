@@ -8,9 +8,13 @@ services:
     command: ["--config", "/config/config.yaml", "run"]
     volumes:
       - ./config.yaml:/config/config.yaml:ro
+      - job-data:/data
     environment:
       TZ: Asia/Kolkata
-      JOB_MONITOR_DATABASE: postgresql://postgres:postgres@127.0.0.1:5432/job_search
+      JOB_MONITOR_DATABASE: /data/jobs.db
       # Optional. Leave unset to run without Telegram notifications.
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+
+volumes:
+  job-data:
