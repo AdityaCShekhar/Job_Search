@@ -1,0 +1,50 @@
+general:
+  interval: 300
+  request_timeout: 30
+  retries: 3
+
+database: postgresql://postgres:postgres@127.0.0.1:5432/job_search
+
+profiles:
+  - name: java-backend
+    keywords:
+      - Java Backend
+      - Spring Boot
+      - Python Developer
+      - Python Backend
+      - Django Developer
+      - FastAPI Developer
+      - Node.js Developer
+      - Node.js Backend
+      - Express.js Developer
+    locations:
+      - Bengaluru
+      - Remote
+    experience_levels:
+      - Entry level
+      - Associate
+    max_age_minutes: 360
+    sources:
+      - linkedin
+      - naukri
+      - indeed
+      - wellfound
+      - instahyre
+      - cutshort
+    excluded_keywords:
+      - Intern
+      - Frontend
+      - Front-end
+      - Front End
+      - UI Developer
+      - User Interface
+    exclude_companies:
+      - TCS
+      - Infosys
+    remote: false
+    enabled: true
+    notifications: true
+
+telegram:
+  token: ""
+  chat_id: ""

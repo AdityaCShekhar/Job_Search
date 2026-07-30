@@ -1,0 +1,2 @@
+"""LinkedIn Job Monitor package."""
+
