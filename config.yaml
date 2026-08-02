@@ -17,18 +17,14 @@ profiles:
       - Node.js Developer
       - Node.js Backend
       - Express.js Developer
+    # Only include jobs posted within the last six hours.
     locations:
-      - Bengaluru
+      - India
       - Remote
-    experience_levels:
-      - Entry level
-      - Associate
+    experience_levels: []
     max_age_minutes: 360
     sources:
       - linkedin
-      - naukri
-      - indeed
-      - wellfound
       - instahyre
       - cutshort
     excluded_keywords:

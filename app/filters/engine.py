@@ -8,6 +8,24 @@ def _contains(value: str, terms: list[str]) -> bool:
     return any(term.casefold() in value for term in terms)
 
 
+def _location_matches(location: str, requested: list[str]) -> bool:
+    """Match explicit locations, or any identified Indian location."""
+    if not location:
+        return False
+    if _contains(location, requested):
+        return True
+    if _contains("india", requested):
+        return any(
+            city in location.casefold()
+            for city in (
+                "india", "bengaluru", "bangalore", "hyderabad", "pune", "mumbai",
+                "delhi", "new delhi", "chennai", "kolkata", "gurgaon", "gurugram",
+                "noida", "ahmedabad", "jaipur", "kochi", "remote",
+            )
+        )
+    return False
+
+
 def _age_in_minutes(posted_time: str | None) -> int | None:
     """Parse LinkedIn relative timestamps such as '25 minutes ago'."""
     if not posted_time:
@@ -31,7 +49,7 @@ def matches(job: Job, profile: Profile) -> bool:
         return False
     if profile.exclude_companies and _contains(job.company, profile.exclude_companies):
         return False
-    if profile.locations and not _contains(job.location, profile.locations):
+    if profile.locations and not _location_matches(job.location, profile.locations):
         return False
     if profile.employment_types and not _contains(job.employment_type or "", profile.employment_types):
         return False
