@@ -29,6 +29,7 @@ profiles:
       - cutshort
     excluded_keywords:
       - Intern
+      - Senior
       - Frontend
       - Front-end
       - Front End
