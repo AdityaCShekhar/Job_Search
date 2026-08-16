@@ -1,3 +1,4 @@
 #!/data/data/com.termux/files/usr/bin/bash
-export JOB_MONITOR_CONFIG="${JOB_MONITOR_CONFIG:-$HOME/Job_Automation/my-config.yaml}"
-exec "$HOME/Job_Automation/termux/job-monitor.sh" start
+export JOB_MONITOR_DIR="${JOB_MONITOR_DIR:-$HOME/Job_Search}"
+export JOB_MONITOR_CONFIG="${JOB_MONITOR_CONFIG:-$JOB_MONITOR_DIR/my-config.yaml}"
+exec "$JOB_MONITOR_DIR/termux/job-monitor.sh" start

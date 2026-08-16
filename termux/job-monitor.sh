@@ -4,7 +4,8 @@
 # from the checked-out repository. Configuration is kept in the repository.
 set -u
 
-BASE_DIR="${JOB_MONITOR_DIR:-$HOME/Job_Automation}"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+BASE_DIR="${JOB_MONITOR_DIR:-$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)}"
 CONFIG_FILE="${JOB_MONITOR_CONFIG:-$BASE_DIR/config.yaml}"
 LOG_DIR="${JOB_MONITOR_LOG_DIR:-$BASE_DIR/logs}"
 LOG_FILE="$LOG_DIR/job-monitor.log"
