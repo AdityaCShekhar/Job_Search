@@ -35,12 +35,16 @@ class Monitor:
                 jobs = filter_jobs(self.adapter.search(profile), profile)
                 result.jobs_found += len(jobs)
                 for job in jobs:
-                    if self.database.add_job_if_new(job):
+                    is_new = self.database.add_job_if_new(job)
+                    if is_new:
                         result.new_jobs += 1
-                        if profile.notifications:
-                            self.notifier.send(job)
                     else:
                         result.duplicates += 1
+                    # A failed Telegram request leaves this flag unset, so the
+                    # next scheduled run retries it without re-inserting the job.
+                    if profile.notifications and self.database.notification_pending(job):
+                        self.notifier.send(job)
+                        self.database.mark_notification_sent(job)
             self.database.finish_run(run_id, result.jobs_found, result.new_jobs, result.duplicates)
             LOGGER.info("Run complete found=%d new=%d duplicates=%d", result.jobs_found, result.new_jobs, result.duplicates)
             return result

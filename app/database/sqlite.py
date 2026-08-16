@@ -23,6 +23,7 @@ class Database:
             id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL, job_id TEXT NOT NULL,
             title TEXT NOT NULL, company TEXT, location TEXT, url TEXT NOT NULL,
             posted_time TEXT, keyword TEXT, created_at TEXT NOT NULL,
+            notification_sent INTEGER NOT NULL DEFAULT 0,
             UNIQUE(source, job_id), UNIQUE(url)
         );
         CREATE TABLE IF NOT EXISTS profiles (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL, enabled INTEGER NOT NULL, interval INTEGER);
@@ -33,6 +34,12 @@ class Database:
         );
         """
         self.connection.executescript(schema)
+        # Keep existing databases compatible with the notification retry state.
+        columns = {row[1] for row in self.connection.execute("PRAGMA table_info(jobs)")}
+        if "notification_sent" not in columns:
+            self.connection.execute(
+                "ALTER TABLE jobs ADD COLUMN notification_sent INTEGER NOT NULL DEFAULT 0"
+            )
         self.connection.commit()
 
     def add_job_if_new(self, job: Job) -> bool:
@@ -42,6 +49,20 @@ class Database:
         )
         self.connection.commit()
         return cursor.rowcount == 1
+
+    def notification_pending(self, job: Job) -> bool:
+        row = self._execute(
+            "SELECT notification_sent FROM jobs WHERE source=? AND job_id=?",
+            (job.source, job.job_id),
+        ).fetchone()
+        return bool(row and not row[0])
+
+    def mark_notification_sent(self, job: Job) -> None:
+        self._execute(
+            "UPDATE jobs SET notification_sent=1 WHERE source=? AND job_id=?",
+            (job.source, job.job_id),
+        )
+        self.connection.commit()
 
     def start_run(self) -> int:
         cursor = self._execute("INSERT INTO run_history(started_at, status) VALUES (?, ?)", (datetime.now(timezone.utc).isoformat(), "running"))

@@ -49,9 +49,15 @@ class LinkedInAdapter:
             if experience_ids:
                 params["f_E"] = ",".join(dict.fromkeys(experience_ids))
             url = "https://www.linkedin.com/jobs/search/?" + "&".join(f"{key}={quote_plus(value)}" for key, value in params.items())
-            response = with_retries(lambda: self.session.get(url, timeout=self.timeout), self.retries)
-            response.raise_for_status()
+            response = with_retries(
+                lambda: self._get_checked(url), self.retries
+            )
             jobs.extend(extract_linkedin_jobs(response.text, keyword))
         unique = {job.job_id: job for job in jobs}
         LOGGER.info("LinkedIn profile=%s found=%d", profile.name, len(unique))
         return list(unique.values())
+
+    def _get_checked(self, url: str) -> requests.Response:
+        response = self.session.get(url, timeout=self.timeout)
+        response.raise_for_status()
+        return response

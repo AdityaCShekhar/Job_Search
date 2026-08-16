@@ -37,7 +37,7 @@ docker compose down
 
 The monitor container runs as a non-root user. Keep `config.yaml` out of public repositories if it contains Telegram credentials; alternatively, mount a private config file at `/config/config.yaml`. The monitor uses SQLite both locally and in Docker.
 
-Commands are `run`, `once`, `validate-config`, `stats`, `clear-cache`, and `test-notification`. The default interval is five minutes. `run` keeps one process alive; cron and Actions should invoke `once`.
+Commands are `run`, `once`, `validate-config`, `stats`, `clear-cache`, and `test-notification`. The default interval is five minutes. `run` keeps one process alive and is the recommended Termux mode.
 
 ## Configuration
 
@@ -55,13 +55,57 @@ Docker Compose also reads these values from a local `.env` file. Do not commit t
 
 LinkedIn's public search markup can change and may rate-limit automated requests. The adapter is isolated in `app/adapters/linkedin.py`, so another job board can implement the same `search(profile) -> list[Job]` method.
 
-## GitHub Actions
+## Termux on Android
 
-The included workflow runs every 15 minutes on GitHub-hosted runners. It uses SQLite (`jobs.db`) with the Actions cache because GitHub-hosted runners cannot access a database running on your local computer. The cache preserves the seen-job database between runs, although cache eviction can eventually cause an old job to be seen again.
+Termux is the runtime scheduler for the phone; GitHub remains only the source repository. The included wrapper keeps one monitor process alive, restarts it if it exits, writes a rotating log, and uses the existing SQLite database for deduplication.
 
-For Telegram notifications, add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` under the repository's **Settings → Secrets and variables → Actions**. Scheduled workflows run from the default branch. Public repositories can use standard GitHub-hosted runners at no charge; private GitHub Free repositories have a monthly minutes quota.
+On the phone, install Termux from F-Droid or GitHub Releases, then run:
 
-Docker deployments use the SQLite database mounted at `./data/jobs.db`.
+```bash
+pkg update -y
+pkg upgrade -y
+pkg install -y git python
+termux-setup-storage
+cd ~
+git clone <your-repository-url> Job_Automation
+cd ~/Job_Automation
+python -m venv .venv
+.venv/bin/pip install --no-cache-dir .
+cp config.yaml my-config.yaml
+${EDITOR:-nano} my-config.yaml
+```
+
+Put Telegram credentials in `my-config.yaml`, or export `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`. Set `general.interval` in seconds; use `900` for 15 minutes. Keep the database on local Termux storage, not shared phone storage.
+
+Validate and test before enabling startup:
+
+```bash
+.venv/bin/python -m app.main --config my-config.yaml validate-config
+.venv/bin/python -m app.main --config my-config.yaml test-notification
+```
+
+The wrapper defaults to `config.yaml`; for a private config, set `JOB_MONITOR_CONFIG=$HOME/Job_Automation/my-config.yaml` before using it:
+
+```bash
+chmod +x termux/job-monitor.sh termux/boot-job-monitor
+JOB_MONITOR_CONFIG=$HOME/Job_Automation/my-config.yaml termux/job-monitor.sh start
+JOB_MONITOR_CONFIG=$HOME/Job_Automation/my-config.yaml termux/job-monitor.sh status
+termux/job-monitor.sh logs
+termux/job-monitor.sh restart
+termux/job-monitor.sh stop
+```
+
+To start after reboot, install and open the separate Termux:Boot add-on once, then copy the boot script:
+
+```bash
+mkdir -p ~/.termux/boot
+cp termux/boot-job-monitor ~/.termux/boot/job-monitor
+chmod +x ~/.termux/boot/job-monitor
+```
+
+Disable Android battery optimization for Termux and Termux:Boot. The wrapper does not hold a wake lock by default to conserve battery. For a phone that must run through deep sleep, enable one with `export JOB_MONITOR_WAKE_LOCK=1`; this increases battery use.
+
+The monitor retries requests with exponential backoff, catches per-portal failures, and continues scheduled runs after failures. Telegram keeps its existing message format and retries; a job is marked notified only after a successful Telegram response, so temporary outages are retried later. A crash after Telegram accepts a request but before SQLite records success can theoretically produce one duplicate.
 
 ## Tests
 

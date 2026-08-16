@@ -56,11 +56,17 @@ class MultiPortalAdapter:
             else:
                 query = f"?q={quote_plus(keyword)}&l={quote_plus(location)}"
             url = base_urls[source] + query
-            response = with_retries(lambda: self.session.get(url, timeout=self.timeout), self.retries)
-            response.raise_for_status()
+            response = with_retries(
+                lambda: self._get_checked(url), self.retries
+            )
             jobs.extend(self._extract_cards(response.text, source, url, keyword))
         LOGGER.info("Portal source=%s found=%d", source, len(jobs))
         return jobs
+
+    def _get_checked(self, url: str) -> requests.Response:
+        response = self.session.get(url, timeout=self.timeout)
+        response.raise_for_status()
+        return response
 
     @staticmethod
     def _extract_cards(html: str, source: str, page_url: str, keyword: str) -> list[Job]:
