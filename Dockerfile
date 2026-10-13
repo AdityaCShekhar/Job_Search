@@ -11,6 +11,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
+# Render runs the image directly and does not apply docker-compose bind mounts.
+# The checked-in config is non-secret; Telegram credentials are injected via env.
+RUN mkdir -p /config
+COPY config.yaml /config/config.yaml
+
 RUN pip install --no-cache-dir .
 
 RUN useradd --create-home --uid 10001 monitor \

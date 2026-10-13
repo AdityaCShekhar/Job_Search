@@ -63,6 +63,11 @@ For Telegram notifications, add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` unde
 
 Docker deployments use the SQLite database mounted at `./data/jobs.db`.
 
+For Render or another platform that runs the Docker image without Compose, the
+image includes the checked-in `config.yaml` at `/config/config.yaml`. Set
+`TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` as platform environment variables;
+do not put those values in the repository config.
+
 ## Tests
 
 ```bash
